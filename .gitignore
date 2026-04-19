@@ -8,3 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# default image directory
+nbt-out/

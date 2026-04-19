@@ -18,7 +18,7 @@ A batch analysis pipeline that uses a local vision LLM (via Ollama) to identify 
 Each schematic is expected to have its own subdirectory containing:
 
 ```
-schematics/
+nbt-out/
   173/
     iso.png        # Isometric view — primary identification image
     top.png        # Top-down orthographic
@@ -30,6 +30,8 @@ schematics/
 ```
 
 ### `meta.json` Schema
+
+Note that the has_base calculation is simplistic, it could be wrong.
 
 ```json
 {
@@ -122,16 +124,16 @@ schematic-analyzer/
 
 ```bash
 # Analyze all schematics in a directory
-python analyze.py --input /path/to/rendered/schematics --output schematic_catalog.json
+uv run analyze.py --input /path/to/rendered/schematics --output schematic_catalog.json
 
 # Analyze a single schematic directory (for testing)
-python analyze.py --input /path/to/rendered/schematics/173 --single
+uv run analyze.py --input /path/to/rendered/schematics/173 --single
 
 # Use a different model
-python analyze.py --input ./schematics --model llava:13b
+uv run analyze.py --input ./nbt-out --model llava:13b
 
 # Re-analyze only entries with confidence below threshold
-python analyze.py --input ./schematics --reanalyze --min-confidence 0.7
+uv run analyze.py --input ./nbt-out --reanalyze --min-confidence 0.7
 ```
 
 ---

@@ -8,6 +8,14 @@ import ollama
 log = logging.getLogger(__name__)
 
 VIEWS = ("iso", "top", "north", "south", "east", "west")
+VIEW_LABELS = {
+    "iso": "isometric view (primary for structural identification)",
+    "top": "top-down view (best for footprint and layout)",
+    "north": "north-facing elevation",
+    "south": "south-facing elevation",
+    "east": "east-facing elevation",
+    "west": "west-facing elevation",
+}
 PROMPT_PATH = Path(__file__).parent / "prompt.txt"
 _FENCE_RE = re.compile(r"^```(?:json)?\s*|\s*```$", re.MULTILINE)
 
@@ -60,13 +68,20 @@ def analyze_one(
     if images is None:
         return None
 
-    prompt = prompt_template.format(meta_excerpt=_meta_excerpt(meta))
+    prompt = prompt_template.replace("{meta_excerpt}", _meta_excerpt(meta))
+
+    messages: list[dict] = []
+    for view, path in zip(VIEWS, images):
+        messages.append({
+            "role": "user",
+            "content": f"This is the {VIEW_LABELS[view]}.",
+            "images": [str(path)],
+        })
+        messages.append({"role": "assistant", "content": "Noted."})
+    messages.append({"role": "user", "content": prompt})
 
     try:
-        resp = client.chat(
-            model=model,
-            messages=[{"role": "user", "content": prompt, "images": [str(p) for p in images]}],
-        )
+        resp = client.chat(model=model, messages=messages)
     except Exception as e:
         log.warning("%s: ollama call failed (%s)", schematic_dir.name, e)
         return None

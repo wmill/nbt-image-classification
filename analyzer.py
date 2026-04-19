@@ -81,16 +81,21 @@ def analyze_one(
     messages.append({"role": "user", "content": prompt})
 
     try:
-        resp = client.chat(model=model, messages=messages)
+        resp = client.chat(
+            model=model,
+            messages=messages,
+            format="json",
+            options={"temperature": 0.3, "num_predict": 2048},
+        )
     except Exception as e:
         log.warning("%s: ollama call failed (%s)", schematic_dir.name, e)
         return None
 
     raw = resp["message"]["content"]
     try:
-        record = json.loads(_strip_fences(raw))
+        record = json.loads(_strip_fences(raw), strict=False)
     except json.JSONDecodeError as e:
-        log.warning("%s: model output not valid JSON (%s); raw=%r", schematic_dir.name, e, raw[:200])
+        log.warning("%s: model output not valid JSON (%s); raw=%r", schematic_dir.name, e, raw[:800])
         return None
 
     if not isinstance(record, dict):

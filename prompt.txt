@@ -1,0 +1,19 @@
+You are analyzing a Minecraft schematic from six orthographic renders (iso, top, north, south, east, west) and pre-computed block metadata. The isometric view is primary for structural identification; the top view is best for footprint; the four cardinal views disambiguate height and orientation.
+
+Block metadata for this schematic:
+{meta_excerpt}
+
+Emit a single JSON object with exactly these fields:
+- "title": short human title (<= 80 chars), e.g. "Medieval Castle with Courtyard"
+- "description": 1-3 sentences covering structure, materials, distinctive features
+- "keywords": 8-16 lowercase keywords / short phrases useful for search
+- "structure_type": one of: building, house, castle, fortification, tower, temple, church, bridge, farm, ship, vehicle, statue, monument, terrain, decoration, other
+- "style": one of: medieval, fantasy, modern, futuristic, rustic, asian, classical, industrial, nautical, mixed, other
+- "placement": { "type": one of [surface, waterfront, elevated, floating, underground], "notes": short string (placement rationale, e.g. "has solid base, suitable for flat terrain") }
+- "size_category": one of: tiny, small, medium, large, massive (infer from size + block count in metadata)
+- "has_interior": boolean — true if the structure has walkable/occupiable interior space
+- "confidence": number 0.0-1.0 — your self-assessed confidence in this classification. Below 0.7 means low / uncertain.
+
+Use the metadata's `placement.has_base` as a hint, but determine `placement.type` from visual evidence. If multiple styles or types apply, pick the dominant one and mention the secondary aspect in `keywords` or `description`.
+
+Output a single JSON object and nothing else. No markdown code fences. No preamble. No trailing commentary.

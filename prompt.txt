@@ -1,4 +1,8 @@
-You are analyzing a Minecraft schematic from six orthographic renders (iso, top, north, south, east, west) and pre-computed block metadata. The isometric view is primary for structural identification; the top view is best for footprint; the four cardinal views disambiguate height and orientation.
+You are analyzing a Minecraft schematic. The single image provided is a 2x3 labeled grid of six orthographic renders of the same structure:
+- Top row:    ISO (primary) | TOP         | NORTH
+- Bottom row: SOUTH         | EAST        | WEST
+
+The ISO tile is primary for structural identification; the TOP tile is best for footprint and layout; the four cardinal elevations disambiguate height, orientation, and back-side detail. Each tile has a grey label strip above it naming the view.
 
 Block metadata for this schematic:
 {meta_excerpt}

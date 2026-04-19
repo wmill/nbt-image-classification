@@ -5,17 +5,10 @@ from pathlib import Path
 
 import ollama
 
+from composite import ORDER, build_composite, composite_to_png_bytes
+
 log = logging.getLogger(__name__)
 
-VIEWS = ("iso", "top", "north", "south", "east", "west")
-VIEW_LABELS = {
-    "iso": "isometric view (primary for structural identification)",
-    "top": "top-down view (best for footprint and layout)",
-    "north": "north-facing elevation",
-    "south": "south-facing elevation",
-    "east": "east-facing elevation",
-    "west": "west-facing elevation",
-}
 PROMPT_PATH = Path(__file__).parent / "prompt.txt"
 _FENCE_RE = re.compile(r"^```(?:json)?\s*|\s*```$", re.MULTILINE)
 
@@ -42,9 +35,9 @@ def _meta_excerpt(meta: dict) -> str:
     return json.dumps(keep, indent=2)
 
 
-def _image_paths(schematic_dir: Path) -> list[Path] | None:
-    paths = [schematic_dir / f"{v}.png" for v in VIEWS]
-    missing = [p.name for p in paths if not p.is_file()]
+def _view_paths(schematic_dir: Path) -> dict[str, Path] | None:
+    paths = {v: schematic_dir / f"{v}.png" for v in ORDER}
+    missing = [p.name for p in paths.values() if not p.is_file()]
     if missing:
         log.warning("%s: missing views %s", schematic_dir.name, missing)
         return None
@@ -64,26 +57,17 @@ def analyze_one(
     meta = _load_meta(schematic_dir)
     if meta is None:
         return None
-    images = _image_paths(schematic_dir)
-    if images is None:
+    paths = _view_paths(schematic_dir)
+    if paths is None:
         return None
 
+    composite_png = composite_to_png_bytes(build_composite(paths))
     prompt = prompt_template.replace("{meta_excerpt}", _meta_excerpt(meta))
-
-    messages: list[dict] = []
-    for view, path in zip(VIEWS, images):
-        messages.append({
-            "role": "user",
-            "content": f"This is the {VIEW_LABELS[view]}.",
-            "images": [str(path)],
-        })
-        messages.append({"role": "assistant", "content": "Noted."})
-    messages.append({"role": "user", "content": prompt})
 
     try:
         resp = client.chat(
             model=model,
-            messages=messages,
+            messages=[{"role": "user", "content": prompt, "images": [composite_png]}],
             format="json",
             options={"temperature": 0.3, "num_predict": 2048},
         )

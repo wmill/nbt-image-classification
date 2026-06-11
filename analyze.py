@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -45,6 +46,11 @@ def write_atomic(path: Path, records: list[dict]) -> None:
     os.replace(tmp, path)
 
 
+def natural_key(p: Path) -> list:
+    # Split name into alternating text/number chunks so embedded numbers sort numerically.
+    return [int(c) if c.isdigit() else c.lower() for c in re.split(r"(\d+)", p.name)]
+
+
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     args = parse_args()
@@ -57,7 +63,7 @@ def main() -> int:
     done = {r.get("schematic_id") for r in records if isinstance(r, dict)}
     log.info("Loaded %d existing records from %s", len(records), args.output)
 
-    subdirs = sorted(p for p in args.input.iterdir() if p.is_dir())
+    subdirs = sorted((p for p in args.input.iterdir() if p.is_dir()), key=natural_key)
     pending = [p for p in subdirs if p.name not in done]
     log.info("Found %d subdirs in %s (%d already done, %d pending)", len(subdirs), args.input, len(subdirs) - len(pending), len(pending))
 
